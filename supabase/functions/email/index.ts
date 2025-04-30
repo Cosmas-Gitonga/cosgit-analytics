@@ -19,10 +19,9 @@ Deno.serve(async (req) => {
       subject,
       message,
       organization,
-      projectType
+      projectType,
     } = await req.json();
 
-    // Validate required fields
     if (!name || !email || !subject || !message) {
       throw new Error("Missing required fields");
     }
@@ -33,12 +32,12 @@ Deno.serve(async (req) => {
       secure: false,
       auth: {
         user: "info@cosgitanalytics.com",
-        pass: "QtXnNCDWenF9qUvRA5hX"
+        pass: "QtXnNCDWenF9qUvRA5hX",
       },
       tls: {
-        rejectUnauthorized: false
+        rejectUnauthorized: false,
       },
-      debug: true
+      debug: true,
     });
 
     const emailContent = `
@@ -47,7 +46,7 @@ New Contact Form Submission
 Name: ${name}
 Email: ${email}
 Phone: ${phone}
-Organization: ${organization || 'N/A'}
+Organization: ${organization || "N/A"}
 Project Type: ${projectType}
 
 Subject: ${subject}
@@ -61,46 +60,45 @@ ${message}
       to: "info@cosgitanalytics.com",
       subject: `New Contact Form Submission: ${subject}`,
       text: emailContent,
-      replyTo: email
+      replyTo: email,
     });
 
     if (!info || !info.messageId) {
       throw new Error("Failed to send email");
     }
 
-    console.log("Email sent:", info.messageId);
-
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         success: true,
         message: "Email sent successfully",
-        messageId: info.messageId 
-      }), 
-      { 
-        headers: { 
-          ...corsHeaders, 
-          "Content-Type": "application/json" 
+        messageId: info.messageId,
+      }),
+      {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
         },
-        status: 200 
+        status: 200,
       }
     );
   } catch (error) {
-    console.error('Email error:', error);
-    
-    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-    
+    console.error("Email error:", error);
+
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
+
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         success: false,
         error: errorMessage,
-        details: "Failed to send email. Please try again later." 
-      }), 
-      { 
-        headers: { 
-          ...corsHeaders, 
-          "Content-Type": "application/json" 
+        details: "Failed to send email. Please try again later.",
+      }),
+      {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
         },
-        status: 500 
+        status: 500,
       }
     );
   }
