@@ -1,0 +1,6 @@
+[build]
+  functions = "netlify/functions"
+  publish = "dist" # or "build" depending on your build folder
+
+[dev]
+  functions = "netlify/functions"
