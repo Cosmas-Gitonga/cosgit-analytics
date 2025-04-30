@@ -182,7 +182,7 @@ const HomePage = () => {
           className="absolute inset-0 bg-cover bg-center z-0" 
           style={{ backgroundImage: 'url(https://images.pexels.com/photos/1181244/pexels-photo-1181244.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2)' }}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-primary-900/90 to-secondary-900/80"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-900/80 to-secondary-900/70"></div>
         </div>
 
         {/* Hero Content */}
@@ -227,49 +227,54 @@ const HomePage = () => {
               </p>
               
               <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="flex items-start">
-                  <CheckCircle2 className="w-5 h-5 text-primary-600 mt-1 mr-2 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-medium">Expert Team</h4>
-                    <p className="text-gray-600 text-sm">Highly skilled data scientists and analysts</p>
+                  <div className="flex items-start">
+                    <CheckCircle2 className="w-5 h-5 text-primary-600 mt-1 mr-2 flex-shrink-0" />
+                    <div>
+                      <h6 className="text-sm font-medium">Expert Team</h6>
+                      <p className="text-gray-600 text-base mt-1">Highly skilled data scientists and analysts</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <CheckCircle2 className="w-5 h-5 text-primary-600 mt-1 mr-2 flex-shrink-0" />
+                    <div>
+                      <h6 className="text-sm font-medium">Proven Methods</h6>
+                      <p className="text-gray-600 text-base mt-1">Advanced analytical techniques</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <CheckCircle2 className="w-5 h-5 text-primary-600 mt-1 mr-2 flex-shrink-0" />
+                    <div>
+                      <h6 className="text-sm font-medium">Custom Solutions</h6>
+                      <p className="text-gray-600 text-base mt-1">Tailored to your unique needs</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <CheckCircle2 className="w-5 h-5 text-primary-600 mt-1 mr-2 flex-shrink-0" />
+                    <div>
+                      <h6 className="text-sm font-medium">Clear Results</h6>
+                      <p className="text-gray-600 text-base mt-1">Actionable insights you can use</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-start">
-                  <CheckCircle2 className="w-5 h-5 text-primary-600 mt-1 mr-2 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-medium">Proven Methods</h4>
-                    <p className="text-gray-600 text-sm">Advanced analytical techniques</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <CheckCircle2 className="w-5 h-5 text-primary-600 mt-1 mr-2 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-medium">Custom Solutions</h4>
-                    <p className="text-gray-600 text-sm">Tailored to your unique needs</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <CheckCircle2 className="w-5 h-5 text-primary-600 mt-1 mr-2 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-medium">Clear Results</h4>
-                    <p className="text-gray-600 text-sm">Actionable insights you can use</p>
-                  </div>
-                </div>
-              </div>
               
               <Link to="/about" className="btn btn-primary">
                 Learn More About Us
               </Link>
             </div>
-            <div className="relative">
-              <div className="absolute -top-4 -left-4 w-24 h-24 bg-primary-100 rounded-lg z-0"></div>
-              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-secondary-100 rounded-lg z-0"></div>
+            
+            <div className="relative w-full h-[400px] rounded-lg overflow-hidden shadow-xl">
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-r from-primary-900/50 to-secondary-900/50 z-10 rounded-lg" />
+
+              {/* Image background */}
               <img 
-                src="https://images.pexels.com/photos/7567468/pexels-photo-7567468.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" 
+                src="https://images.pexels.com/photos/1181244/pexels-photo-1181244.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" 
                 alt="Data analytics visualization" 
-                className="rounded-lg shadow-xl relative z-10"
+                className="w-full h-full object-cover rounded-lg"
               />
             </div>
+
+
           </div>
         </div>
       </section>
@@ -384,7 +389,7 @@ const HomePage = () => {
             {currentTestimonials.map(testimonial => (
               <div 
                 key={testimonial.id} 
-                className="relative bg-white rounded-2xl shadow-lg p-8 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                className="relative bg-primary-50/50 rounded-2xl shadow-lg p-8 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
               >
                 {/* Quote Icon */}
                 <div className="absolute -top-4 right-8">

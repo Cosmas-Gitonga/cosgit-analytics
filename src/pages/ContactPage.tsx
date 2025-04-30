@@ -348,11 +348,17 @@ const ContactPage = () => {
           </div>
 
           <div className="space-y-8">
-            <img 
-              src="https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" 
-              alt="Professional African team in boardroom" 
-              className="rounded-lg shadow-lg w-full h-[400px] object-cover"
-            />
+          <div className="relative w-full h-[400px] rounded-lg overflow-hidden shadow-lg">
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-r from-primary-900/50 to-secondary-900/50 z-10 rounded-lg" />
+
+              {/* Image background */}
+              <img  
+                src="https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" 
+                alt="Professional African team in boardroom" 
+                className="w-full h-full object-cover rounded-lg"
+              />
+          </div>
 
             {showApiKeyInput ? (
               <div className="bg-white rounded-lg shadow-lg p-6">
