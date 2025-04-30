@@ -1,4 +1,4 @@
-import { SmtpClient } from "npm:smtp-client@0.4.0";
+import { SMTPClient } from "npm:nodemailer@6.9.8";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,12 +22,17 @@ Deno.serve(async (req) => {
       projectType
     } = await req.json();
 
-    const smtp = new SmtpClient({
+    const smtp = new SMTPClient({
       host: "mail.cosgitanalytics.com",
       port: 587,
-      username: "info@cosgitanalytics.com",
-      password: "QtXnNCDWenF9qUvRA5hX",
-      tls: true,
+      secure: false,
+      auth: {
+        user: "info@cosgitanalytics.com",
+        pass: "QtXnNCDWenF9qUvRA5hX"
+      },
+      tls: {
+        rejectUnauthorized: false
+      }
     });
 
     const emailContent = `
@@ -45,14 +50,15 @@ Message:
 ${message}
     `;
 
-    await smtp.connect();
-    await smtp.send({
-      from: "info@cosgitanalytics.com",
+    const info = await smtp.sendMail({
+      from: '"Cosgit Analytics Website" <info@cosgitanalytics.com>',
       to: "info@cosgitanalytics.com",
       subject: `New Contact Form Submission: ${subject}`,
-      content: emailContent,
+      text: emailContent,
+      replyTo: email
     });
-    await smtp.close();
+
+    console.log("Email sent:", info.messageId);
 
     return new Response(
       JSON.stringify({ message: "Email sent successfully" }), 
@@ -64,10 +70,10 @@ ${message}
   } catch (error) {
     console.error('Email error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }), 
+      JSON.stringify({ error: "Failed to send email. Please try again later." }), 
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400 
+        status: 500 
       }
     );
   }

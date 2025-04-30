@@ -46,7 +46,10 @@ const ContactPage = () => {
         body: JSON.stringify(data),
       });
 
-      if (!contactResponse.ok) throw new Error('Failed to submit contact form');
+      if (!contactResponse.ok) {
+        const contactError = await contactResponse.json();
+        throw new Error(contactError.error || 'Failed to submit contact form');
+      }
 
       // Send email
       const emailResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/email`, {
@@ -58,7 +61,10 @@ const ContactPage = () => {
         body: JSON.stringify(data),
       });
 
-      if (!emailResponse.ok) throw new Error('Failed to send email');
+      if (!emailResponse.ok) {
+        const emailError = await emailResponse.json();
+        throw new Error(emailError.error || 'Failed to send email notification');
+      }
 
       setIsSubmitted(true);
       reset();
