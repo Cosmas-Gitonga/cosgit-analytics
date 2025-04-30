@@ -35,9 +35,31 @@ const ContactPage = () => {
   const onSubmit = async (data: ContactFormData) => {
     try {
       setError(null);
-      // Here you would typically send the form data to your email service
-      // For now, we'll just simulate a successful submission
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Submit to contact form endpoint
+      const contactResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/contact`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!contactResponse.ok) throw new Error('Failed to submit contact form');
+
+      // Send email
+      const emailResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/email`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!emailResponse.ok) throw new Error('Failed to send email');
+
       setIsSubmitted(true);
       reset();
     } catch (err) {
