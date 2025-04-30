@@ -1,5 +1,3 @@
-// send-email.js — Netlify Function using Resend
-
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -8,7 +6,7 @@ export async function handler(event) {
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      body: 'Method Not Allowed'
+      body: 'Method Not Allowed',
     };
   }
 
@@ -18,12 +16,12 @@ export async function handler(event) {
     if (!name || !email || !subject || !message) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ success: false, error: 'Missing required fields' })
+        body: JSON.stringify({ success: false, error: 'Missing required fields' }),
       };
     }
 
-    const emailHtml = `
-      <h2>New Contact Form Submission</h2>
+    const htmlContent = `
+      <h2>New Contact Submission</h2>
       <p><strong>Name:</strong> ${name}</p>
       <p><strong>Email:</strong> ${email}</p>
       <p><strong>Phone:</strong> ${phone}</p>
@@ -34,27 +32,27 @@ export async function handler(event) {
       <p>${message.replace(/\n/g, '<br>')}</p>
     `;
 
-    const result = await resend.emails.send({
+    const response = await resend.emails.send({
       from: 'info@cosgitanalytics.com',
       to: 'info@cosgitanalytics.com',
       subject: `New Contact Form: ${subject}`,
-      html: emailHtml,
-      reply_to: email
+      html: htmlContent,
+      reply_to: email,
     });
 
-    if (!result || !result.id) {
+    if (!response?.id) {
       throw new Error('Failed to send email');
     }
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ success: true, message: 'Email sent successfully', id: result.id })
+      body: JSON.stringify({ success: true, id: response.id }),
     };
   } catch (error) {
-    console.error('Email sending error:', error);
+    console.error('Resend error:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ success: false, error: error.message || 'Internal server error' })
+      body: JSON.stringify({ success: false, error: error.message || 'Email error' }),
     };
   }
 }
