@@ -8,19 +8,34 @@ export async function handler(event) {
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      body: 'Method Not Allowed'
+      body: 'Method Not Allowed',
     };
   }
 
   try {
-    const { name, email, phone, subject, message, organization, projectType } = JSON.parse(event.body);
+    const {
+      name,
+      email,
+      phone,
+      subject,
+      message,
+      organization,
+      projectType,
+      otherProjectType,
+    } = JSON.parse(event.body);
 
-    if (!name || !email || !subject || !message) {
+    if (!name || !email || !subject || !message || !projectType) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ success: false, error: 'Missing required fields' })
+        body: JSON.stringify({ success: false, error: 'Missing required fields' }),
       };
     }
+
+    // Handle dynamic projectType
+    const finalProjectType =
+      projectType === 'other' && otherProjectType
+        ? `Other: ${otherProjectType}`
+        : projectType;
 
     const emailHtml = `
       <h2>New Contact Form Submission</h2>
@@ -28,7 +43,7 @@ export async function handler(event) {
       <p><strong>Email:</strong> ${email}</p>
       <p><strong>Phone:</strong> ${phone}</p>
       <p><strong>Organization:</strong> ${organization || 'N/A'}</p>
-      <p><strong>Project Type:</strong> ${projectType}</p>
+      <p><strong>Project Type:</strong> ${finalProjectType}</p>
       <p><strong>Subject:</strong> ${subject}</p>
       <p><strong>Message:</strong></p>
       <p>${message.replace(/\n/g, '<br>')}</p>
@@ -39,19 +54,16 @@ export async function handler(event) {
       to: 'info@cosgitanalytics.com',
       subject: `New Contact Form: ${subject}`,
       html: emailHtml,
-      reply_to: email
+      reply_to: email,
     });
-
-    // Relaxed validation for response to avoid false error
-    const messageId = result?.data?.id || null;
 
     return {
       statusCode: 200,
       body: JSON.stringify({
         success: true,
         message: 'Email sent successfully',
-        id: messageId
-      })
+        id: result?.data?.id || 'unknown',
+      }),
     };
   } catch (error) {
     console.error('Email sending error:', error);
@@ -59,8 +71,8 @@ export async function handler(event) {
       statusCode: 500,
       body: JSON.stringify({
         success: false,
-        error: error.message || 'Internal server error'
-      })
+        error: error.message || 'Internal server error',
+      }),
     };
   }
 }

@@ -1,10 +1,12 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Mail, Phone, MapPin, Send, Clock, CheckCircle2 } from 'lucide-react';
-import { useState } from 'react';
+import { Mail, Phone, MapPin, Send, Clock, CheckCircle2, Key } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Loader } from '@googlemaps/js-api-loader';
 import PageHeader from '../components/common/PageHeader';
 import SectionTitle from '../components/common/SectionTitle';
+import { services } from '../data/servicesData';
 
 const contactSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -13,7 +15,8 @@ const contactSchema = z.object({
   subject: z.string().min(5, 'Subject must be at least 5 characters'),
   message: z.string().min(20, 'Message must be at least 20 characters'),
   organization: z.string().optional(),
-  projectType: z.enum(['data-science', 'analytics', 'research', 'monitoring', 'other']),
+  projectType: z.string().min(1, 'Please select a project type'),
+  otherProjectType: z.string().optional(),
 });
 
 type ContactFormData = z.infer<typeof contactSchema>;
@@ -22,25 +25,123 @@ const ContactPage = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [apiKey, setApiKey] = useState(localStorage.getItem('google_maps_api_key') || '');
+  const [showApiKeyInput, setShowApiKeyInput] = useState(!apiKey);
+  const [selectedProjectType, setSelectedProjectType] = useState('');
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<google.maps.Map | null>(null);
 
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    watch,
+    formState: { errors }
   } = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
   });
+
+  const projectType = watch('projectType');
+
+  useEffect(() => {
+    if (apiKey && mapRef.current && !mapInstanceRef.current) {
+      const loader = new Loader({
+        apiKey,
+        version: "weekly"
+      });
+
+      loader.load().then(() => {
+        const location = { lat: -1.2518, lng: 36.7089 }; // Coordinates for Lower Kabete, Nairobi
+        
+        mapInstanceRef.current = new google.maps.Map(mapRef.current!, {
+          center: location,
+          zoom: 15,
+          styles: [
+            {
+              featureType: "all",
+              elementType: "geometry",
+              stylers: [{ color: "#242f3e" }]
+            },
+            {
+              featureType: "all",
+              elementType: "labels.text.stroke",
+              stylers: [{ color: "#242f3e" }]
+            },
+            {
+              featureType: "all",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#746855" }]
+            },
+            {
+              featureType: "administrative.locality",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#d59563" }]
+            },
+            {
+              featureType: "water",
+              elementType: "geometry",
+              stylers: [{ color: "#17263c" }]
+            },
+            {
+              featureType: "water",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#515c6d" }]
+            },
+            {
+              featureType: "road",
+              elementType: "geometry",
+              stylers: [{ color: "#38414e" }]
+            },
+            {
+              featureType: "road",
+              elementType: "geometry.stroke",
+              stylers: [{ color: "#212a37" }]
+            },
+            {
+              featureType: "road",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#9ca5b3" }]
+            }
+          ]
+        });
+
+        new google.maps.Marker({
+          position: location,
+          map: mapInstanceRef.current,
+          title: "Cosgit Analytics",
+          animation: google.maps.Animation.DROP
+        });
+      }).catch((error) => {
+        console.error("Error loading Google Maps:", error);
+        setShowApiKeyInput(true);
+      });
+    }
+  }, [apiKey]);
+
+  const handleApiKeySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    localStorage.setItem('google_maps_api_key', apiKey);
+    setShowApiKeyInput(false);
+  };
 
   const onSubmit = async (data: ContactFormData) => {
     try {
       setError(null);
       setIsSubmitting(true);
 
+      const finalProjectType = data.projectType === 'other' 
+        ? `Other: ${data.otherProjectType}` 
+        : data.projectType;
+
+      const formData = {
+        ...data,
+        projectType: finalProjectType,
+      };
+
       const response = await fetch('/.netlify/functions/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(formData),
       });
 
       const text = await response.text();
@@ -74,33 +175,59 @@ const ContactPage = () => {
         bgImage="https://images.pexels.com/photos/7681091/pexels-photo-7681091.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
       />
 
-      <section className="py-16 bg-white">
-        <div className="container grid md:grid-cols-3 gap-8">
-          <div className="text-center p-8 rounded-lg bg-white shadow-lg hover:shadow-xl">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-50 mb-4">
-              <Phone className="w-8 h-8 text-primary-600" />
+      <section className="py-8 bg-white">
+        <div className="container">
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="group relative overflow-hidden bg-white rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.1)] transition-all duration-300 hover:shadow-[0_0_20px_rgba(0,0,0,0.15)] hover:-translate-y-1">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="relative p-5 text-center">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-50 mb-3 transform transition-transform duration-300 group-hover:scale-110 group-hover:bg-primary-100">
+                  <Phone className="w-6 h-6 text-primary-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">Phone</h3>
+                <p className="text-gray-600 mb-2">+254 717 065 015</p>
+                <a 
+                  href="tel:+254717065015" 
+                  className="inline-flex items-center justify-center px-4 py-2 text-primary-600 font-semibold hover:text-primary-700 transition-colors"
+                >
+                  Call us
+                </a>
+              </div>
             </div>
-            <h3 className="text-xl font-bold mb-4">Phone</h3>
-            <p className="text-gray-600">+254 717 065 015</p>
-            <a href="tel:+254717065015" className="text-primary-600 font-medium hover:text-primary-700">Call us</a>
-          </div>
 
-          <div className="text-center p-8 rounded-lg bg-white shadow-lg hover:shadow-xl">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-50 mb-4">
-              <Mail className="w-8 h-8 text-primary-600" />
+            <div className="group relative overflow-hidden bg-white rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.1)] transition-all duration-300 hover:shadow-[0_0_20px_rgba(0,0,0,0.15)] hover:-translate-y-1">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="relative p-5 text-center">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-50 mb-3 transform transition-transform duration-300 group-hover:scale-110 group-hover:bg-primary-100">
+                  <Mail className="w-6 h-6 text-primary-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">Email</h3>
+                <p className="text-gray-600 mb-2">info@cosgitanalytics.com</p>
+                <a 
+                  href="mailto:info@cosgitanalytics.com" 
+                  className="inline-flex items-center justify-center px-4 py-2 text-primary-600 font-semibold hover:text-primary-700 transition-colors"
+                >
+                  Email us
+                </a>
+              </div>
             </div>
-            <h3 className="text-xl font-bold mb-4">Email</h3>
-            <p className="text-gray-600">info@cosgitanalytics.com</p>
-            <a href="mailto:info@cosgitanalytics.com" className="text-primary-600 font-medium hover:text-primary-700">Email us</a>
-          </div>
 
-          <div className="text-center p-8 rounded-lg bg-white shadow-lg hover:shadow-xl">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-50 mb-4">
-              <MapPin className="w-8 h-8 text-primary-600" />
+            <div className="group relative overflow-hidden bg-white rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.1)] transition-all duration-300 hover:shadow-[0_0_20px_rgba(0,0,0,0.15)] hover:-translate-y-1">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="relative p-5 text-center">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-50 mb-3 transform transition-transform duration-300 group-hover:scale-110 group-hover:bg-primary-100">
+                  <MapPin className="w-6 h-6 text-primary-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">Office</h3>
+                <p className="text-gray-600 mb-2">Kabete Gardens Apartment, Lower Kabete, Nairobi, Kenya</p>
+                <a 
+                  href="https://maps.google.com" 
+                  className="inline-flex items-center justify-center px-4 py-2 text-primary-600 font-semibold hover:text-primary-700 transition-colors"
+                >
+                  Get directions
+                </a>
+              </div>
             </div>
-            <h3 className="text-xl font-bold mb-4">Office</h3>
-            <p className="text-gray-600">Kabete Gardens Apartment, Lower Kabete, Nairobi, Kenya</p>
-            <a href="https://maps.google.com" className="text-primary-600 font-medium hover:text-primary-700">Get directions</a>
           </div>
         </div>
       </section>
@@ -128,12 +255,12 @@ const ContactPage = () => {
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="name">Full Name *</label>
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
                     <input id="name" type="text" {...register('name')} className={`form-control ${errors.name ? 'border-red-500' : ''}`} />
                     {errors.name && <p className="text-sm text-red-600">{errors.name.message}</p>}
                   </div>
                   <div>
-                    <label htmlFor="email">Email Address *</label>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
                     <input id="email" type="email" {...register('email')} className={`form-control ${errors.email ? 'border-red-500' : ''}`} />
                     {errors.email && <p className="text-sm text-red-600">{errors.email.message}</p>}
                   </div>
@@ -141,50 +268,114 @@ const ContactPage = () => {
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="phone">Phone Number *</label>
+                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
                     <input id="phone" type="tel" {...register('phone')} className={`form-control ${errors.phone ? 'border-red-500' : ''}`} />
                     {errors.phone && <p className="text-sm text-red-600">{errors.phone.message}</p>}
                   </div>
                   <div>
-                    <label htmlFor="organization">Organization</label>
+                    <label htmlFor="organization" className="block text-sm font-medium text-gray-700 mb-1">Organization</label>
                     <input id="organization" type="text" {...register('organization')} className="form-control" />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="subject">Subject *</label>
+                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
                   <input id="subject" type="text" {...register('subject')} className={`form-control ${errors.subject ? 'border-red-500' : ''}`} />
                   {errors.subject && <p className="text-sm text-red-600">{errors.subject.message}</p>}
                 </div>
 
-                <div>
-                  <label htmlFor="projectType">Project Type *</label>
-                  <select id="projectType" {...register('projectType')} className={`form-control ${errors.projectType ? 'border-red-500' : ''}`}>
-                    <option value="">Select a project type</option>
-                    <option value="data-science">Data Science</option>
-                    <option value="analytics">Analytics</option>
-                    <option value="research">Research</option>
-                    <option value="monitoring">Monitoring</option>
-                    <option value="other">Other</option>
-                  </select>
-                  {errors.projectType && <p className="text-sm text-red-600">{errors.projectType.message}</p>}
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="projectType" className="block text-sm font-medium text-gray-700 mb-1">Project Type *</label>
+                    <select 
+                      id="projectType" 
+                      {...register('projectType')}
+                      onChange={(e) => setSelectedProjectType(e.target.value)}
+                      className={`form-control ${errors.projectType ? 'border-red-500' : ''}`}
+                    >
+                      <option value="">Select a project type</option>
+                      {services.map(service => (
+                        <option key={service.id} value={service.id}>
+                          {service.title}
+                        </option>
+                      ))}
+                      <option value="other">Other</option>
+                    </select>
+                    {errors.projectType && <p className="text-sm text-red-600">{errors.projectType.message}</p>}
+                  </div>
+
+                  {projectType === 'other' && (
+                    <div>
+                      <label htmlFor="otherProjectType" className="block text-sm font-medium text-gray-700 mb-1">
+                        Please specify your project type *
+                      </label>
+                      <input
+                        id="otherProjectType"
+                        type="text"
+                        {...register('otherProjectType')}
+                        className="form-control"
+                        placeholder="Enter your project type"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div>
-                  <label htmlFor="message">Message *</label>
-                  <textarea id="message" rows={6} {...register('message')} className={`form-control ${errors.message ? 'border-red-500' : ''}`} />
+                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">Message *</label>
+                  <textarea 
+                    id="message" 
+                    rows={6} 
+                    {...register('message')} 
+                    className={`form-control ${errors.message ? 'border-red-500' : ''}`}
+                    placeholder="Tell us about your project or inquiry..."
+                  />
                   {errors.message && <p className="text-sm text-red-600">{errors.message.message}</p>}
                 </div>
 
-                <button type="submit" disabled={isSubmitting} className="btn btn-primary w-full flex items-center justify-center gap-2">
-                  {isSubmitting ? (<><Clock className="animate-spin" /> Sending...</>) : (<><Send /> Send Message</>)}
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting} 
+                  className="btn btn-primary w-full flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <><Clock className="animate-spin" /> Sending...</>
+                  ) : (
+                    <><Send /> Send Message</>
+                  )}
                 </button>
               </form>
             )}
           </div>
 
-          <div className="hidden lg:block">
-            <img src="https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="Contact us" className="rounded-lg shadow-lg w-full h-full object-cover" />
+          <div className="space-y-8">
+            <img 
+              src="https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" 
+              alt="Professional African team in boardroom" 
+              className="rounded-lg shadow-lg w-full h-[400px] object-cover"
+            />
+
+            {showApiKeyInput ? (
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <form onSubmit={handleApiKeySubmit} className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Key className="w-5 h-5 text-primary-600" />
+                    <h3 className="text-lg font-semibold">Google Maps API Key</h3>
+                  </div>
+                  <input
+                    type="text"
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    placeholder="Enter your API key"
+                    className="form-control"
+                  />
+                  <button type="submit" className="btn btn-primary w-full">
+                    Load Map
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <div ref={mapRef} className="w-full h-[400px] rounded-lg shadow-lg overflow-hidden" />
+            )}
           </div>
         </div>
       </section>
