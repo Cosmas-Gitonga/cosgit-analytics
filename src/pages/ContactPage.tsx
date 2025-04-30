@@ -22,12 +22,13 @@ type ContactFormData = z.infer<typeof contactSchema>;
 const ContactPage = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { 
     register, 
     handleSubmit, 
     reset,
-    formState: { errors, isSubmitting } 
+    formState: { errors } 
   } = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
   });
@@ -35,6 +36,7 @@ const ContactPage = () => {
   const onSubmit = async (data: ContactFormData) => {
     try {
       setError(null);
+      setIsSubmitting(true);
       
       // Submit to contact form endpoint
       const contactResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/contact`, {
@@ -66,11 +68,19 @@ const ContactPage = () => {
         throw new Error(emailError.error || 'Failed to send email notification');
       }
 
+      const emailResult = await emailResponse.json();
+      
+      if (!emailResult.success) {
+        throw new Error(emailResult.error || 'Failed to send email');
+      }
+
       setIsSubmitted(true);
       reset();
     } catch (err) {
       console.error('Error submitting form:', err);
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

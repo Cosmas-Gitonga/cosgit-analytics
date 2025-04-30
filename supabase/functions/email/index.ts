@@ -22,6 +22,11 @@ Deno.serve(async (req) => {
       projectType
     } = await req.json();
 
+    // Validate required fields
+    if (!name || !email || !subject || !message) {
+      throw new Error("Missing required fields");
+    }
+
     const smtp = new SMTPClient({
       host: "mail.cosgitanalytics.com",
       port: 587,
@@ -32,7 +37,8 @@ Deno.serve(async (req) => {
       },
       tls: {
         rejectUnauthorized: false
-      }
+      },
+      debug: true
     });
 
     const emailContent = `
@@ -58,21 +64,42 @@ ${message}
       replyTo: email
     });
 
+    if (!info || !info.messageId) {
+      throw new Error("Failed to send email");
+    }
+
     console.log("Email sent:", info.messageId);
 
     return new Response(
-      JSON.stringify({ message: "Email sent successfully" }), 
+      JSON.stringify({ 
+        success: true,
+        message: "Email sent successfully",
+        messageId: info.messageId 
+      }), 
       { 
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { 
+          ...corsHeaders, 
+          "Content-Type": "application/json" 
+        },
         status: 200 
       }
     );
   } catch (error) {
     console.error('Email error:', error);
+    
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    
     return new Response(
-      JSON.stringify({ error: "Failed to send email. Please try again later." }), 
+      JSON.stringify({ 
+        success: false,
+        error: errorMessage,
+        details: "Failed to send email. Please try again later." 
+      }), 
       { 
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { 
+          ...corsHeaders, 
+          "Content-Type": "application/json" 
+        },
         status: 500 
       }
     );
