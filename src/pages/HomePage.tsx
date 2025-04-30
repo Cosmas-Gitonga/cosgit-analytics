@@ -180,7 +180,7 @@ const HomePage = () => {
         {/* Background Image with Overlay */}
         <div 
           className="absolute inset-0 bg-cover bg-center z-0" 
-          style={{ backgroundImage: 'url(https://images.pexels.com/photos/7947944/pexels-photo-7947944.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2)' }}
+          style={{ backgroundImage: 'url(https://images.pexels.com/photos/1181244/pexels-photo-1181244.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2)' }}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-primary-900/90 to-secondary-900/80"></div>
         </div>
