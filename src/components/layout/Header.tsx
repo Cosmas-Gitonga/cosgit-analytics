@@ -74,7 +74,7 @@ const Header = () => {
     >
       <div className="container">
         <div className="flex items-center justify-between">
-          <Link 
+          {/* <Link 
             to="/" 
             className="flex items-center group transition-transform duration-300 hover:scale-105"
           >
@@ -82,7 +82,21 @@ const Header = () => {
             <span className="ml-2 text-xl font-bold text-white">
               Cosgit Analytics
             </span>
+          </Link> */}
+
+          <Link 
+            to="/" 
+            className="flex items-center transition-transform duration-300 hover:scale-105"
+          >
+            <img 
+              src="/cosgit-logo.png" 
+              alt="Cosgit Analytics Logo" 
+              className="h-14 md:h-16 w-auto object-contain"
+            />
           </Link>
+
+
+
 
           <nav className="hidden md:flex items-center space-x-1">
             {desktopNavItems.map((item) => 
