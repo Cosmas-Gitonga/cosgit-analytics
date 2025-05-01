@@ -91,7 +91,7 @@ const Header = () => {
             <img 
               src="/cosgit-logo.png" 
               alt="Cosgit Analytics Logo" 
-              className="h-14 md:h-16 w-auto object-contain"
+              className="h-14 md:h-16 w-auto object-contain rounded-xl"
             />
           </Link>
 
