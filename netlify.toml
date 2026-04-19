@@ -1,6 +1,22 @@
+#Origibal Working Code:
+
+# [build]
+#   functions = "netlify/functions"
+#   publish = "dist" # or "build" depending on your build folder
+
+# [dev]
+#   functions = "netlify/functions"
+
+#===============
+
 [build]
   functions = "netlify/functions"
-  publish = "dist" # or "build" depending on your build folder
+  publish = "dist"
 
 [dev]
   functions = "netlify/functions"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
