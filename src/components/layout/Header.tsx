@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, BarChart2, ChevronDown } from 'lucide-react';
+import { Menu, X, ChevronDown } from 'lucide-react';
 import { useAdmin } from '../../context/AdminContext';
-import { services } from '../../data/servicesData';
+import { useServices } from '../../context/ServicesContext';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -10,6 +10,8 @@ const Header = () => {
   const [servicesOpen, setServicesOpen] = useState(false);
   const location = useLocation();
   const { isAuthenticated } = useAdmin();
+  const { services } = useServices();
+
   const servicesDropdownRef = useRef<HTMLDivElement>(null);
   const mobileServicesRef = useRef<HTMLDivElement>(null);
 
@@ -27,11 +29,17 @@ const Header = () => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (servicesDropdownRef.current && !servicesDropdownRef.current.contains(event.target as Node)) {
+      if (
+        servicesDropdownRef.current &&
+        !servicesDropdownRef.current.contains(event.target as Node)
+      ) {
         setServicesOpen(false);
       }
-      
-      if (mobileServicesRef.current && !mobileServicesRef.current.contains(event.target as Node)) {
+
+      if (
+        mobileServicesRef.current &&
+        !mobileServicesRef.current.contains(event.target as Node)
+      ) {
         setServicesOpen(false);
       }
     };
@@ -46,16 +54,16 @@ const Header = () => {
   }, [location]);
 
   const navItems = [
-    { name: 'Home', path: '/' },
-    { name: 'About Us', path: '/about' },
-    { name: 'Contact Us', path: '/contact' },
-    { name: 'Blog', path: '/blog' },
+    { name: 'Home', path: '/', hasDropdown: false },
+    { name: 'About Us', path: '/about', hasDropdown: false },
+    { name: 'Contact Us', path: '/contact', hasDropdown: false },
+    { name: 'Blog', path: '/blog', hasDropdown: false },
   ];
 
   const desktopNavItems = [
     ...navItems.slice(0, 2),
     { name: 'Services', path: '/services', hasDropdown: true },
-    ...navItems.slice(2)
+    ...navItems.slice(2),
   ];
 
   const handleMobileServicesClick = (e: React.MouseEvent) => {
@@ -74,38 +82,21 @@ const Header = () => {
     >
       <div className="container">
         <div className="flex items-center justify-between">
-          {/* <Link 
-            to="/" 
-            className="flex items-center group transition-transform duration-300 hover:scale-105"
-          >
-            <BarChart2 className="w-8 h-8 text-white transition-transform group-hover:rotate-12" />
-            <span className="ml-2 text-xl font-bold text-white">
-              Cosgit Analytics
-            </span>
-          </Link> */}
-
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="flex items-center transition-transform duration-300 hover:scale-105"
           >
-            <img 
-              src="/cosgit-logo.png" 
-              alt="Cosgit Analytics Logo" 
+            <img
+              src="/cosgit-logo.png"
+              alt="Cosgit Analytics Logo"
               className="h-14 md:h-16 w-auto object-contain rounded-xl"
             />
           </Link>
 
-
-
-
           <nav className="hidden md:flex items-center space-x-1">
-            {desktopNavItems.map((item) => 
+            {desktopNavItems.map((item) =>
               item.hasDropdown ? (
-                <div 
-                  key="services"
-                  className="relative"
-                  ref={servicesDropdownRef}
-                >
+                <div key="services" className="relative" ref={servicesDropdownRef}>
                   <button
                     onClick={() => setServicesOpen(!servicesOpen)}
                     onMouseEnter={() => setServicesOpen(true)}
@@ -116,11 +107,15 @@ const Header = () => {
                     }`}
                   >
                     Services
-                    <ChevronDown className={`ml-1 w-4 h-4 transition-transform duration-300 ${servicesOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown
+                      className={`ml-1 w-4 h-4 transition-transform duration-300 ${
+                        servicesOpen ? 'rotate-180' : ''
+                      }`}
+                    />
                   </button>
-                  
+
                   {servicesOpen && (
-                    <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-lg shadow-lg border border-gray-100 py-2 animate-fade-in">
+                    <div className="absolute top-full left-0 mt-1 w-72 bg-white rounded-lg shadow-lg border border-gray-100 py-2 animate-fade-in">
                       <Link
                         to="/services"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-500 transition-colors"
@@ -128,16 +123,20 @@ const Header = () => {
                         All Services
                       </Link>
                       <div className="h-px bg-gray-100 my-2"></div>
-                      {services.map((service) => (
-                        <Link
-                          key={service.id}
-                          to={`/services/${service.id}`}
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-500 transition-colors"
-                        >
-                          <service.icon className="w-4 h-4 mr-2" />
-                          {service.title}
-                        </Link>
-                      ))}
+
+                      {services.map((service) => {
+                        const Icon = service.icon;
+                        return (
+                          <Link
+                            key={service.id}
+                            to={`/services/${service.id}`}
+                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-primary-50 hover:text-primary-500 transition-colors"
+                          >
+                            <Icon className="w-4 h-4 mr-2" />
+                            {service.title}
+                          </Link>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -155,7 +154,7 @@ const Header = () => {
                 </Link>
               )
             )}
-            
+
             {isAuthenticated && (
               <Link
                 to="/admin"
@@ -195,7 +194,7 @@ const Header = () => {
                 {item.name}
               </Link>
             ))}
-            
+
             <div className="px-4 py-2" ref={mobileServicesRef}>
               <button
                 onClick={handleMobileServicesClick}
@@ -204,26 +203,35 @@ const Header = () => {
                 }`}
               >
                 Services
-                <ChevronDown className={`ml-1 w-4 h-4 transition-transform duration-300 ${servicesOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown
+                  className={`ml-1 w-4 h-4 transition-transform duration-300 ${
+                    servicesOpen ? 'rotate-180' : ''
+                  }`}
+                />
               </button>
+
               {servicesOpen && (
-                <div className="mt-2 pl-4 space-y-2 border-l-2 border-gray-100 animate-slide-down">
+                <div className="mt-2 ml-4 space-y-1">
                   <Link
                     to="/services"
-                    className="block py-2 text-sm text-gray-700 hover:text-primary-500 transition-colors"
+                    className="block px-4 py-2 text-sm text-gray-700 rounded-md hover:text-primary-500 hover:bg-gray-50"
                   >
                     All Services
                   </Link>
-                  {services.map((service) => (
-                    <Link
-                      key={service.id}
-                      to={`/services/${service.id}`}
-                      className="flex items-center py-2 text-sm text-gray-700 hover:text-primary-500 transition-colors"
-                    >
-                      <service.icon className="w-4 h-4 mr-2" />
-                      {service.title}
-                    </Link>
-                  ))}
+
+                  {services.map((service) => {
+                    const Icon = service.icon;
+                    return (
+                      <Link
+                        key={service.id}
+                        to={`/services/${service.id}`}
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 rounded-md hover:text-primary-500 hover:bg-gray-50"
+                      >
+                        <Icon className="w-4 h-4 mr-2" />
+                        {service.title}
+                      </Link>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -241,12 +249,9 @@ const Header = () => {
                 {item.name}
               </Link>
             ))}
-            
+
             {isAuthenticated && (
-              <Link
-                to="/admin"
-                className="block px-4 py-2 text-base font-medium text-primary-500 hover:bg-primary-50 rounded-md"
-              >
+              <Link to="/admin" className="block mx-4 mt-2 btn btn-primary text-center">
                 Dashboard
               </Link>
             )}

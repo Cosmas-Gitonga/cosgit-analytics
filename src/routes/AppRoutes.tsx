@@ -9,6 +9,8 @@ import BlogPostPage from '../pages/BlogPostPage';
 import AdminLoginPage from '../pages/admin/AdminLoginPage';
 import AdminDashboardPage from '../pages/admin/AdminDashboardPage';
 import AdminBlogPage from '../pages/admin/AdminBlogPage';
+import AdminServicesPage from '../pages/admin/AdminServicesPage';
+import AdminPagesPage from '../pages/admin/AdminPagesPage';
 import NotFoundPage from '../pages/NotFoundPage';
 import ProtectedRoute from './ProtectedRoute';
 
@@ -22,21 +24,41 @@ const AppRoutes = () => {
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/blog" element={<BlogPage />} />
       <Route path="/blog/:slug" element={<BlogPostPage />} />
-      
-      {/* Admin Routes */}
+
       <Route path="/admin/login" element={<AdminLoginPage />} />
-      <Route path="/admin" element={
-        <ProtectedRoute>
-          <AdminDashboardPage />
-        </ProtectedRoute>
-      } />
-      <Route path="/admin/blog" element={
-        <ProtectedRoute>
-          <AdminBlogPage />
-        </ProtectedRoute>
-      } />
-      
-      {/* 404 - Not Found */}
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute>
+            <AdminDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/blog"
+        element={
+          <ProtectedRoute>
+            <AdminBlogPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/services"
+        element={
+          <ProtectedRoute>
+            <AdminServicesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/pages"
+        element={
+          <ProtectedRoute>
+            <AdminPagesPage />
+          </ProtectedRoute>
+        }
+      />
+
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );

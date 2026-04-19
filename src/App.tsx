@@ -4,6 +4,8 @@ import { Layout } from './components/layout/Layout';
 import { ScrollToTop } from './components/common/ScrollToTop';
 import { BlogProvider } from './context/BlogContext';
 import { AdminProvider } from './context/AdminContext';
+import { ServicesProvider } from './context/ServicesContext';
+import { PageContentProvider } from './context/PageContentContext';
 
 function App() {
   return (
@@ -11,9 +13,13 @@ function App() {
       <ScrollToTop />
       <AdminProvider>
         <BlogProvider>
-          <Layout>
-            <AppRoutes />
-          </Layout>
+          <ServicesProvider>
+            <PageContentProvider>
+              <Layout>
+                <AppRoutes />
+              </Layout>
+            </PageContentProvider>
+          </ServicesProvider>
         </BlogProvider>
       </AdminProvider>
     </Router>

@@ -1,3 +1,5 @@
+import { usePageContent } from '../context/PageContentContext';
+import { useServices } from '../context/ServicesContext';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -6,7 +8,6 @@ import { useState, useEffect, useRef } from 'react';
 import { Loader } from '@googlemaps/js-api-loader';
 import PageHeader from '../components/common/PageHeader';
 import SectionTitle from '../components/common/SectionTitle';
-import { services } from '../data/servicesData';
 
 const contactSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -22,12 +23,15 @@ const contactSchema = z.object({
 type ContactFormData = z.infer<typeof contactSchema>;
 
 const ContactPage = () => {
+  const { content } = usePageContent();
+  const contactContent = content.contact;
+  const { services } = useServices();
+
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiKey, setApiKey] = useState(localStorage.getItem('google_maps_api_key') || '');
   const [showApiKeyInput, setShowApiKeyInput] = useState(!apiKey);
-  const [selectedProjectType, setSelectedProjectType] = useState('');
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
 
@@ -36,7 +40,7 @@ const ContactPage = () => {
     handleSubmit,
     reset,
     watch,
-    formState: { errors }
+    formState: { errors },
   } = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
   });
@@ -47,74 +51,77 @@ const ContactPage = () => {
     if (apiKey && mapRef.current && !mapInstanceRef.current) {
       const loader = new Loader({
         apiKey,
-        version: "weekly"
+        version: 'weekly',
       });
 
-      loader.load().then(() => {
-        const location = { lat: -1.2518, lng: 36.7089 }; // Coordinates for Lower Kabete, Nairobi
-        
-        mapInstanceRef.current = new google.maps.Map(mapRef.current!, {
-          center: location,
-          zoom: 15,
-          styles: [
-            {
-              featureType: "all",
-              elementType: "geometry",
-              stylers: [{ color: "#242f3e" }]
-            },
-            {
-              featureType: "all",
-              elementType: "labels.text.stroke",
-              stylers: [{ color: "#242f3e" }]
-            },
-            {
-              featureType: "all",
-              elementType: "labels.text.fill",
-              stylers: [{ color: "#746855" }]
-            },
-            {
-              featureType: "administrative.locality",
-              elementType: "labels.text.fill",
-              stylers: [{ color: "#d59563" }]
-            },
-            {
-              featureType: "water",
-              elementType: "geometry",
-              stylers: [{ color: "#17263c" }]
-            },
-            {
-              featureType: "water",
-              elementType: "labels.text.fill",
-              stylers: [{ color: "#515c6d" }]
-            },
-            {
-              featureType: "road",
-              elementType: "geometry",
-              stylers: [{ color: "#38414e" }]
-            },
-            {
-              featureType: "road",
-              elementType: "geometry.stroke",
-              stylers: [{ color: "#212a37" }]
-            },
-            {
-              featureType: "road",
-              elementType: "labels.text.fill",
-              stylers: [{ color: "#9ca5b3" }]
-            }
-          ]
-        });
+      loader
+        .load()
+        .then(() => {
+          const location = { lat: -1.2518, lng: 36.7089 };
 
-        new google.maps.Marker({
-          position: location,
-          map: mapInstanceRef.current,
-          title: "Cosgit Analytics",
-          animation: google.maps.Animation.DROP
+          mapInstanceRef.current = new google.maps.Map(mapRef.current!, {
+            center: location,
+            zoom: 15,
+            styles: [
+              {
+                featureType: 'all',
+                elementType: 'geometry',
+                stylers: [{ color: '#242f3e' }],
+              },
+              {
+                featureType: 'all',
+                elementType: 'labels.text.stroke',
+                stylers: [{ color: '#242f3e' }],
+              },
+              {
+                featureType: 'all',
+                elementType: 'labels.text.fill',
+                stylers: [{ color: '#746855' }],
+              },
+              {
+                featureType: 'administrative.locality',
+                elementType: 'labels.text.fill',
+                stylers: [{ color: '#d59563' }],
+              },
+              {
+                featureType: 'water',
+                elementType: 'geometry',
+                stylers: [{ color: '#17263c' }],
+              },
+              {
+                featureType: 'water',
+                elementType: 'labels.text.fill',
+                stylers: [{ color: '#515c6d' }],
+              },
+              {
+                featureType: 'road',
+                elementType: 'geometry',
+                stylers: [{ color: '#38414e' }],
+              },
+              {
+                featureType: 'road',
+                elementType: 'geometry.stroke',
+                stylers: [{ color: '#212a37' }],
+              },
+              {
+                featureType: 'road',
+                elementType: 'labels.text.fill',
+                stylers: [{ color: '#9ca5b3' }],
+              },
+            ],
+          });
+
+          new google.maps.Marker({
+            position: location,
+            map: mapInstanceRef.current,
+            title: 'Cosgit Analytics',
+            animation: google.maps.Animation.DROP,
+          });
+        })
+        .catch((error) => {
+          console.error('Error loading Google Maps:', error);
+          setShowApiKeyInput(true);
         });
-      }).catch((error) => {
-        console.error("Error loading Google Maps:", error);
-        setShowApiKeyInput(true);
-      });
     }
   }, [apiKey]);
 
@@ -129,9 +136,8 @@ const ContactPage = () => {
       setError(null);
       setIsSubmitting(true);
 
-      const finalProjectType = data.projectType === 'other' 
-        ? `Other: ${data.otherProjectType}` 
-        : data.projectType;
+      const finalProjectType =
+        data.projectType === 'other' ? `Other: ${data.otherProjectType}` : data.projectType;
 
       const formData = {
         ...data,
@@ -169,9 +175,9 @@ const ContactPage = () => {
 
   return (
     <>
-      <PageHeader 
-        title="Contact Us" 
-        subtitle="Get in touch with our team for any inquiries or to discuss your data needs"
+      <PageHeader
+        title={contactContent.headerTitle}
+        subtitle={contactContent.headerSubtitle}
         bgImage="https://images.pexels.com/photos/7681091/pexels-photo-7681091.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
       />
 
@@ -184,13 +190,13 @@ const ContactPage = () => {
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-50 mb-3 transform transition-transform duration-300 group-hover:scale-110 group-hover:bg-primary-100">
                   <Phone className="w-6 h-6 text-primary-600" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">Phone</h3>
-                <p className="text-gray-600 mb-2">+254 717 065 015</p>
-                <a 
-                  href="tel:+254717065015" 
+                <h3 className="text-xl font-bold text-gray-800 mb-2">{contactContent.phoneTitle}</h3>
+                <p className="text-gray-600 mb-2">{contactContent.phoneNumber}</p>
+                <a
+                  href={`tel:${contactContent.phoneNumber.replace(/\s+/g, '')}`}
                   className="inline-flex items-center justify-center px-4 py-2 text-primary-600 font-semibold hover:text-primary-700 transition-colors"
                 >
-                  Call us
+                  {contactContent.phoneButtonText}
                 </a>
               </div>
             </div>
@@ -201,13 +207,13 @@ const ContactPage = () => {
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-50 mb-3 transform transition-transform duration-300 group-hover:scale-110 group-hover:bg-primary-100">
                   <Mail className="w-6 h-6 text-primary-600" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">Email</h3>
-                <p className="text-gray-600 mb-2">info@cosgitanalytics.com</p>
-                <a 
-                  href="mailto:info@cosgitanalytics.com" 
+                <h3 className="text-xl font-bold text-gray-800 mb-2">{contactContent.emailTitle}</h3>
+                <p className="text-gray-600 mb-2">{contactContent.emailAddress}</p>
+                <a
+                  href={`mailto:${contactContent.emailAddress}`}
                   className="inline-flex items-center justify-center px-4 py-2 text-primary-600 font-semibold hover:text-primary-700 transition-colors"
                 >
-                  Email us
+                  {contactContent.emailButtonText}
                 </a>
               </div>
             </div>
@@ -218,10 +224,12 @@ const ContactPage = () => {
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary-50 mb-3 transform transition-transform duration-300 group-hover:scale-110 group-hover:bg-primary-100">
                   <MapPin className="w-6 h-6 text-primary-600" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">Office</h3>
-                <p className="text-gray-600 mb-2">Kabete Gardens Apartment, Lower Kabete, Nairobi, Kenya</p>
-                <a 
-                  href="https://maps.google.com" 
+                <h3 className="text-xl font-bold text-gray-800 mb-2">
+                  {contactContent.addressTitle}
+                </h3>
+                <p className="text-gray-600 mb-2">{contactContent.addressText}</p>
+                <a
+                  href="https://maps.google.com"
                   className="inline-flex items-center justify-center px-4 py-2 text-primary-600 font-semibold hover:text-primary-700 transition-colors"
                 >
                   Get directions
@@ -235,10 +243,11 @@ const ContactPage = () => {
       <section className="py-16 bg-gray-50">
         <div className="container grid lg:grid-cols-2 gap-12 items-start">
           <div className="bg-white rounded-lg shadow-lg p-8">
-            <SectionTitle 
-              title="Send us a Message" 
+            <SectionTitle
+              title="Send us a Message"
               subtitle="Fill out the form below and we'll get back to you as soon as possible"
-              align="left" />
+              align="left"
+            />
 
             {isSubmitted ? (
               <div className="text-center py-12">
@@ -247,7 +256,9 @@ const ContactPage = () => {
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">Thank You!</h3>
                 <p className="text-gray-600 mb-6">Your message has been received.</p>
-                <button onClick={() => setIsSubmitted(false)} className="btn btn-primary">Send Another Message</button>
+                <button onClick={() => setIsSubmitted(false)} className="btn btn-primary">
+                  Send Another Message
+                </button>
               </div>
             ) : (
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -255,58 +266,108 @@ const ContactPage = () => {
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-                    <input id="name" type="text" {...register('name')} className={`form-control ${errors.name ? 'border-red-500' : ''}`} />
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                      Full Name *
+                    </label>
+                    <input
+                      id="name"
+                      type="text"
+                      {...register('name')}
+                      className={`form-control ${errors.name ? 'border-red-500' : ''}`}
+                    />
                     {errors.name && <p className="text-sm text-red-600">{errors.name.message}</p>}
                   </div>
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
-                    <input id="email" type="email" {...register('email')} className={`form-control ${errors.email ? 'border-red-500' : ''}`} />
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                      Email Address *
+                    </label>
+                    <input
+                      id="email"
+                      type="email"
+                      {...register('email')}
+                      className={`form-control ${errors.email ? 'border-red-500' : ''}`}
+                    />
                     {errors.email && <p className="text-sm text-red-600">{errors.email.message}</p>}
                   </div>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
-                    <input id="phone" type="tel" {...register('phone')} className={`form-control ${errors.phone ? 'border-red-500' : ''}`} />
+                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                      Phone Number *
+                    </label>
+                    <input
+                      id="phone"
+                      type="tel"
+                      {...register('phone')}
+                      className={`form-control ${errors.phone ? 'border-red-500' : ''}`}
+                    />
                     {errors.phone && <p className="text-sm text-red-600">{errors.phone.message}</p>}
                   </div>
                   <div>
-                    <label htmlFor="organization" className="block text-sm font-medium text-gray-700 mb-1">Organization</label>
-                    <input id="organization" type="text" {...register('organization')} className="form-control" />
+                    <label
+                      htmlFor="organization"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Organization
+                    </label>
+                    <input
+                      id="organization"
+                      type="text"
+                      {...register('organization')}
+                      className="form-control"
+                    />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
-                  <input id="subject" type="text" {...register('subject')} className={`form-control ${errors.subject ? 'border-red-500' : ''}`} />
+                  <label
+                    htmlFor="subject"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Subject *
+                  </label>
+                  <input
+                    id="subject"
+                    type="text"
+                    {...register('subject')}
+                    className={`form-control ${errors.subject ? 'border-red-500' : ''}`}
+                  />
                   {errors.subject && <p className="text-sm text-red-600">{errors.subject.message}</p>}
                 </div>
 
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="projectType" className="block text-sm font-medium text-gray-700 mb-1">Project Type *</label>
-                    <select 
-                      id="projectType" 
+                    <label
+                      htmlFor="projectType"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Project Type *
+                    </label>
+                    <select
+                      id="projectType"
                       {...register('projectType')}
-                      onChange={(e) => setSelectedProjectType(e.target.value)}
                       className={`form-control ${errors.projectType ? 'border-red-500' : ''}`}
                     >
                       <option value="">Select a project type</option>
-                      {services.map(service => (
+                      {services.map((service) => (
                         <option key={service.id} value={service.id}>
                           {service.title}
                         </option>
                       ))}
                       <option value="other">Other</option>
                     </select>
-                    {errors.projectType && <p className="text-sm text-red-600">{errors.projectType.message}</p>}
+                    {errors.projectType && (
+                      <p className="text-sm text-red-600">{errors.projectType.message}</p>
+                    )}
                   </div>
 
                   {projectType === 'other' && (
                     <div>
-                      <label htmlFor="otherProjectType" className="block text-sm font-medium text-gray-700 mb-1">
+                      <label
+                        htmlFor="otherProjectType"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
                         Please specify your project type *
                       </label>
                       <input
@@ -321,26 +382,35 @@ const ContactPage = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">Message *</label>
-                  <textarea 
-                    id="message" 
-                    rows={6} 
-                    {...register('message')} 
+                  <label
+                    htmlFor="message"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Message *
+                  </label>
+                  <textarea
+                    id="message"
+                    rows={6}
+                    {...register('message')}
                     className={`form-control ${errors.message ? 'border-red-500' : ''}`}
                     placeholder="Tell us about your project or inquiry..."
                   />
                   {errors.message && <p className="text-sm text-red-600">{errors.message.message}</p>}
                 </div>
 
-                <button 
-                  type="submit" 
-                  disabled={isSubmitting} 
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
                   className="btn btn-primary w-full flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? (
-                    <><Clock className="animate-spin" /> Sending...</>
+                    <>
+                      <Clock className="animate-spin" /> Sending...
+                    </>
                   ) : (
-                    <><Send /> Send Message</>
+                    <>
+                      <Send /> Send Message
+                    </>
                   )}
                 </button>
               </form>
@@ -348,17 +418,15 @@ const ContactPage = () => {
           </div>
 
           <div className="space-y-8">
-          <div className="relative w-full h-[400px] rounded-lg overflow-hidden shadow-lg">
-              {/* Gradient overlay */}
+            <div className="relative w-full h-[400px] rounded-lg overflow-hidden shadow-lg">
               <div className="absolute inset-0 bg-gradient-to-r from-primary-900/50 to-secondary-900/50 z-10 rounded-lg" />
 
-              {/* Image background */}
-              <img  
-                src="https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" 
-                alt="Professional African team in boardroom" 
+              <img
+                src="https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+                alt="Professional African team in boardroom"
                 className="w-full h-full object-cover rounded-lg"
               />
-          </div>
+            </div>
 
             {showApiKeyInput ? (
               <div className="bg-white rounded-lg shadow-lg p-6">
